@@ -26,10 +26,157 @@
   justify-content: space-between;
   padding-left: 16px;
   padding-right: 24px;
+  gap: 0;
+  // 确保inner容器与页面内容对齐
+  margin: 0 auto;
 }
 
 .header-left {
-  min-width: 300px;
+  flex-shrink: 0;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  
+  // 非 Explore 页面：搜索框居中，但添加左外边距
+  &.search-center {
+    --search-width: 415px;
+    justify-content: center; // 保持居中
+    margin-left: 230px; // 增加左外边距230px
+  }
+  
+  // Explore 页面：大盒子容器，从侧边栏宽度之后开始，减去185px，再加77px
+  &.explore-center-box {
+    justify-content: flex-start;
+    margin-left: calc(var(--default-layout-sidebar-width, 240px) - 185px + 77px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    
+    &.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    
+    &.hidden {
+      transform: translateX(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+}
+
+.explore-box-content {
+  display: flex;
+  align-items: center;
+  gap: 38px; // 搜索框和分类框间距 38px
+  width: 100%;
+  padding-right: 88px; // 分类框离右边 88px
+}
+
+.search-container {
+  flex-shrink: 0;
+  margin-right: 0;
+
+  // Explore 页面的搜索框宽度更小
+  &.explore-search {
+    --search-width: 280px;
+  }
+}
+
+.category-nav-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px; // 确保分类框有最小宽度，可见
+  position: relative;
+  max-width: none; // 移除最大宽度限制，让分类框延展到右边
+}
+
+.category-nav-scroll {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; // Firefox
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari
+  }
+}
+
+.category-nav-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  min-width: max-content;
+}
+
+.category-item {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--text-color);
+  background-color: transparent;
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover:not(.active) {
+    background-color: rgba(22, 24, 35, 0.06);
+  }
+
+  &.active {
+    background-color: rgba(22, 24, 35, 0.08);
+    color: var(--text-color);
+    font-weight: 600;
+    cursor: grab;
+  }
+
+  &.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+}
+
+.scroll-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(22, 24, 35, 0.06);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(22, 24, 35, 0.12);
+  }
+
+  &:active {
+    background-color: rgba(22, 24, 35, 0.18);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .logo-container {
@@ -41,6 +188,8 @@
 .action {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .more-icon {

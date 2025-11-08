@@ -1,5 +1,7 @@
 .text-info-container {
   margin-right: 114px;
+  position: relative;
+  padding-bottom: 4px; // 增加底部间距
 }
 
 .author-container {
@@ -23,6 +25,7 @@
   line-height: 2.5rem;
   display: inline-block;
   margin-right: 4px;
+  color: rgba(22, 24, 35, 1);
 }
 
 .tick-icon {
@@ -34,6 +37,7 @@
   font-size: 1.4rem;
   display: inline-block;
   line-height: 2.8rem;
+  color: rgba(22, 24, 35, 0.75);
 }
 
 .follow-button {
@@ -55,6 +59,8 @@
   font-size: 1.6rem;
   line-height: 2.2rem;
   word-break: break-word;
+  color: rgba(22, 24, 35, 1);
+  margin-bottom: 4px; // 增加底部间距
 }
 
 .hashTag-strong {
@@ -70,8 +76,9 @@
   font-weight: 600;
   font-size: 1.6rem;
   line-height: 2.2rem;
-  margin-top: 4px;
+  margin-top: 8px; // 增加顶部间距
   margin-bottom: 1.2rem;
+  color: rgba(22, 24, 35, 0.75);
 }
 
 .music-icon {

@@ -1,0 +1,17 @@
+.wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 16px;
+  font-family: 'SofiaPro', 'Arial', 'Tahoma', 'Helvetica', 'Arial', sans-serif;
+}
+

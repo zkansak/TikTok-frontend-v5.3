@@ -1,6 +1,15 @@
 .video-container {
   display: flex;
   align-items: flex-end;
+
+  // 全屏模式
+  &.fullscreen {
+    align-items: center;
+    justify-content: center; // 居中对齐整个容器
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
 }
 
 .video-card-container {
@@ -10,10 +19,17 @@
   border-radius: 8px;
   overflow: hidden;
   margin-right: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); // 添加轻微阴影，更像 TikTok
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); // 悬停时阴影加深
+  }
 }
 
 .portrait {
   height: 600px;
+  width: 338px; // TikTok 网页端竖屏视频宽度
   .canvas-placeholder {
     height: 100%;
   }
@@ -21,8 +37,31 @@
 
 .landscape {
   width: 600px;
+  height: 338px; // 保持 16:9 比例
   .canvas-placeholder {
     width: 100%;
+  }
+}
+
+// 全屏模式：视频更大 - 参考 TikTok 的布局
+.video-card-container.fullscreen {
+  margin-right: 0; // 全屏模式不需要右边距
+  border-radius: 16px; // 参考 TikTok: border-radius: 16px
+  // 视频框向右移动，通过transform实现，不影响布局流
+  transform: translateX(92px); // 向右移动60像素
+
+  &.portrait {
+    height: calc(100vh - var(--default-layout-header-height, 60px) - 40px);
+    width: auto;
+    max-width: 85vw; // 增大视频尺寸
+    aspect-ratio: 9 / 16; // 保持竖屏比例
+  }
+
+  &.landscape {
+    width: calc(100vw - var(--default-layout-sidebar-width, 240px) - 120px);
+    height: auto;
+    max-height: calc(100vh - var(--default-layout-header-height, 60px) - 40px);
+    aspect-ratio: 16 / 9; // 保持横屏比例
   }
 }
 
@@ -61,18 +100,68 @@
   background-repeat: no-repeat;
   background-position: center;
 
-  &:focus-within,
-  &:hover {
-    .play-button,
-    .volume-button,
-    .progress-container {
-      opacity: 1;
-    }
+  // 确保视频容器可以触发 hover
+  &:hover .video-player {
+    cursor: pointer;
   }
+  
+  // 允许文本选择（除了进度条区域）
+  user-select: text;
+  -webkit-user-select: text;
+}
 
-  button {
-    background-color: transparent;
-  }
+// 视频覆盖层 - 参考 TikTok 结构
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; // 默认不拦截事件，让点击能穿透到视频
+  z-index: 5; // 确保不覆盖header（header z-index: 10）
+  // 防止闪烁
+  will-change: opacity;
+}
+
+// 顶部控件区域
+.overlay-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  display: flex;
+  justify-content: flex-start; // 音量按钮在左上角
+  align-items: flex-start;
+  pointer-events: none; // 容器不拦截事件
+  z-index: 6; // 确保在视频上方，但不覆盖header（header z-index: 10）
+}
+
+.top-controls {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto; // 按钮可以点击
+}
+
+// 底部控件区域 - 扩大拖拽区域到视频下部10%
+.overlay-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10%; // 视频下部10%区域（用于拖拽）
+  padding: 0;
+  pointer-events: none; // 容器不拦截事件
+  z-index: 5; // 确保在视频上方，但不覆盖header（header z-index: 10）
+  // 确保底部区域可见
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 0; // 贴合底部
+  // 允许文本选择（除了进度条区域）
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .video-player {
@@ -80,53 +169,269 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  pointer-events: auto; // 确保可以交互
 }
 
+// 中央播放/暂停按钮
 .play-button {
-  left: 12px;
   position: absolute;
-  padding: 10px;
-  width: 40px;
-  height: 40px;
-  transition: opacity 0.3s;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.15s ease;
+  z-index: 7; // 确保在视频上方，但不覆盖header（header z-index: 10）
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto; // 始终可以点击
+  // 防止闪烁
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  
+  // 默认隐藏（播放时隐藏，暂停或 hover 时显示）
   opacity: 0;
-  bottom: 26px;
+  visibility: hidden;
+  
+  // 显示状态
+  &.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  
+  &:active {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
 }
 
-.volume-container {
-  position: absolute;
-  bottom: 26px;
-  left: unset;
-  right: 12px;
-}
-
+// 音量按钮 - 在顶部控件区域，鼠标经过才显示
 .volume-button {
-  padding: 8px;
-  opacity: 0;
   width: 40px;
   height: 40px;
-  transition: opacity 0.3s ease 0s;
+  padding: 0;
+  transition: opacity 0.2s ease, visibility 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto; // 始终可以点击
+  // 防止闪烁
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  
+  // 默认隐藏，hover 时显示
+  opacity: 0;
+  visibility: hidden;
+  
+  // hover 时显示
+  &.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &.is-muted {
+    opacity: 0.8;
+  }
 }
 
 .hide {
   opacity: 1;
 }
 
+// 时间显示 - 拖拽时显示在进度条上方，大字体
+.time-display-large {
+  position: absolute;
+  bottom: 30px; // 在进度条上方
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 32px; // TikTok 使用 32px
+  font-weight: bold;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  z-index: 7; // 确保在视频上方，但不覆盖header（header z-index: 10）
+  pointer-events: none;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); // 添加阴影提高可读性
+  letter-spacing: 0;
+}
+
+// 进度条容器 - 完全按照 TikTok 实现，扩大拖拽区域
 .progress-container {
   width: 100%;
-  height: 16px;
-  padding-inline: 12px;
-  position: absolute;
-  opacity: 0;
-  transition: opacity 0.3s ease 0s;
-  bottom: 12px;
-  cursor: initial;
+  height: 2px; // 使用 2px 高度，但红色填充区域会更细
+  padding: 0;
   display: flex;
+  align-items: center;
+  pointer-events: auto; // 进度条区域可以交互
+  z-index: 6; // 确保在视频上方，但不覆盖header（header z-index: 10）
+  position: relative;
+  cursor: pointer;
+  // 扩大拖拽区域，让整个底部10%区域都可以拖拽
+  margin-top: auto;
+  // 防止在进度条区域选择文本
+  user-select: none;
+  -webkit-user-select: none;
+  // 确保进度条区域可以拖拽，但不会触发视频切换
+  touch-action: none; // 禁用默认触摸行为，完全由进度条拖拽逻辑控制
+}
+
+.progress-bar-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  // 扩大可点击区域，让整个底部区域都可以拖拽
+  padding: 10px 0; // 上下增加点击区域
+  margin: -10px 0; // 负边距保持视觉位置不变
+}
+
+.progress-bar-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.3); // 恢复背景色
+  border-radius: 0;
+}
+
+.progress-bar-filled {
+  position: absolute;
+  left: 0;
+  top: 50%; // 垂直居中
+  transform: translateY(-50%);
+  height: 2px; // 红色区域更细，只有 1px
+  background-color: #ff0050; // TikTok 红色
+  border-radius: 0;
+  // 只在非拖拽时使用 transition，拖拽时禁用以提升性能
+  transition: width 0.1s linear;
+  z-index: 1;
+  
+  // 拖拽时禁用 transition，避免卡顿
+  .progress-container.dragging & {
+    transition: none;
+  }
+}
+
+.progress-handle {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 0; // 默认不显示手柄
+  height: 0;
+  background-color: #ff0050; // TikTok 红色
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 2;
+  transition: width 0.2s ease, height 0.2s ease, opacity 0.2s ease;
+  opacity: 0; // 默认隐藏
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3); // 添加白色边框，更好贴合进度条
+  
+  // hover 时显示小手柄
+  .progress-bar-wrapper:hover & {
+    opacity: 1;
+    width: 6px; // 更小的手柄
+    height: 6px;
+  }
+  
+  // 拖拽时显示稍大手柄，但保持与进度条贴合
+  &:active {
+    cursor: grabbing;
+    opacity: 1;
+    width: 8px; // 拖拽时稍大，但不会太大
+    height: 8px;
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.4); // 拖拽时边框稍大
+  }
+}
+
+// 当正在拖拽时，手柄始终显示
+.progress-container:active .progress-handle,
+.progress-container.dragging .progress-handle {
+  opacity: 1;
+  width: 8px; // 拖拽时稍大，但不会太大
+  height: 8px;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.4); // 拖拽时边框稍大
+}
+
+.time-tooltip {
+  position: absolute;
+  bottom: 20px; // TikTok 时间提示在手柄上方
+  left: 0%;
+  transform: translateX(-50%);
+  padding: 5px 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  line-height: 16px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+  z-index: 3;
+  pointer-events: none;
+  
+  // 小三角箭头指向手柄
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid rgba(0, 0, 0, 0.7);
+  }
 }
 
 .action-container {
   display: flex;
   flex-direction: column;
+
+  // 全屏模式：右侧交互按钮 - 分离，不在视频框内
+  &.fullscreen {
+    position: relative; // 改为相对定位，与视频框并列
+    right: auto;
+    top: auto;
+    transform: translateX(60px); // 向右移动60像素，与视频框一起移动
+    z-index: 6;
+    gap: 12px; // 缩小按钮间距
+    margin-left: 50px; // 与视频框间隔50像素，实现明显分离
+    margin-top: 60px; // 整体下移
+    align-items: center; // 居中对齐所有按钮
+    // 确保交互框独立显示，与视频框明显分离
+    flex-shrink: 0;
+  }
 }
 
 .action-button {
@@ -138,6 +443,12 @@
   align-items: center;
   cursor: pointer;
   flex-direction: column;
+  
+  // 全屏模式下的样式调整
+  .action-container.fullscreen & {
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .action-outline {
@@ -169,60 +480,313 @@
   text-align: center;
 }
 
-.bar-container {
-  width: 100%;
-  height: 16px;
-  flex: 1 1 auto;
-  position: relative;
-}
+// 移除旧的进度条样式，使用新的 TikTok 风格实现
 
-.input-progress {
-  --progress: 0%;
-}
-
-input[type='range'] {
-  appearance: none !important;
-  height: 2px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.341);
+// 全屏模式样式 - 参考 TikTok 的 DivMediaCardOverlayBottom
+.fullscreen-info-overlay {
   position: absolute;
-  left: 0px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
+  bottom: 25%; // 位于视频框底部1/4位置
+  left: 0; // 与视频框左边缘对齐
+  right: 0; // 与视频框右边缘对齐
+  width: 100%; // 宽度与视频框同宽
+  z-index: 6;
+  color: rgba(22, 24, 35, 0.75); // 深色文字
+  padding: 16px; // 基本内边距
+  padding-bottom: 0.25rem;
+  // 允许文本选择
+  user-select: text;
+  -webkit-user-select: text;
+  pointer-events: auto; // 确保可以交互
+  // 透明背景，去掉美化效果
+  background: transparent;
 }
 
-input[type='range']::-webkit-slider-thumb {
-  appearance: none;
+// 信息盒子容器
+.fullscreen-info-box {
+  background: transparent; // 透明背景，去掉美化
+  padding: 0; // 基本内边距
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  // 去掉美化效果，保留基本布局
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+// 信息行通用样式
+.fullscreen-info-row {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.fullscreen-info-row-name {
+  margin-bottom: 4px;
+}
+
+.fullscreen-info-row-desc {
+  margin-bottom: 4px;
   position: relative;
-
-  width: 12px;
-  height: 12px;
-  background-color: white;
-  border-radius: 50%;
-  z-index: 1;
-  margin-top: -4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px; // 减少间距，让按钮更贴近文本
+  flex-wrap: nowrap; // 防止换行
 }
 
-input[type='range']::-webkit-slider-runnable-track {
-  -webkit-appearance: none;
-  height: 2px;
-  background: linear-gradient(to right, white, white), #ffffff57;
-  background-size: var(--progress) 100%;
-  background-repeat: no-repeat;
-  border-radius: 5px;
+.fullscreen-info-row-translate {
+  margin-bottom: 4px;
+  padding-top: 0.5rem;
 }
 
-.time-container {
-  font-family: Verdana, Geneva, Tahoma, sans-serif, sans-serif;
-  flex: 0 0 64px;
-  max-width: 64px;
-  margin-inline-start: 8px;
-  font-size: 10px;
-  line-height: 16px;
-  color: rgb(255, 255, 255);
-  text-align: end;
+.fullscreen-info-row-music {
+  margin-top: 0;
+}
+
+// 移除旧的 .fullscreen-author-info，现在使用 .fullscreen-info-row-name
+
+.fullscreen-author-link {
+  text-decoration: none;
+  color: rgba(22, 24, 35, 0.75); // 改为深色文字
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fullscreen-author-title {
+  font-size: 17px; // 参考 TikTok: font-size: 17px
+  font-weight: 500; // 参考 TikTok: weight-medium
+  line-height: 24px;
+  color: rgba(22, 24, 35, 0.75); // 深色文字
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; // 参考 TikTok: gap: 0.25rem
+  text-overflow: ellipsis;
+  overflow-x: clip;
+  min-width: 0px;
+  text-wrap: nowrap;
+  // 允许文本选择
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.fullscreen-tick-icon {
+  width: 16px;
+  height: 16px;
+}
+
+// 移除 .fullscreen-author-name，现在只显示用户名
+
+// 移除旧的 .fullscreen-desc-container，现在使用 .fullscreen-info-row-desc
+
+.fullscreen-video-desc {
+  font-size: 14px; // 参考 TikTok: font-size: 14px
+  line-height: 20px;
+  color: rgba(22, 24, 35, 0.75); // 深色文字
+  word-break: break-word;
+  letter-spacing: 0.09380000000000001; // 参考 TikTok
+  flex: 1;
+  min-width: 0; // 允许收缩
+  position: relative;
+  // 允许文本选择
+  user-select: text;
+  -webkit-user-select: text;
+
+  strong,
+  a {
+    font-weight: 500; // 参考 TikTok: weight-medium
+    color: rgba(22, 24, 35, 0.9); // 深色文字
+  }
+
+  a {
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// 用于测量文本宽度的隐藏元素
+.fullscreen-video-desc-measure {
+  position: absolute;
+  visibility: hidden;
   white-space: nowrap;
-  font-feature-settings: 'tnum';
-  font-variant-numeric: tabular-nums;
+  top: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.09380000000000001;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  z-index: -1;
+  // 确保测量元素可以正确计算宽度
+  display: inline-block;
+}
+
+// 实际显示的文本内容
+.fullscreen-video-desc-content {
+  // 未展开时：单行显示，超出显示省略号
+  .fullscreen-video-desc:not(.expanded) & {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  // 展开时：显示全部内容，允许换行
+  .fullscreen-video-desc.expanded & {
+    display: block;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+// "更多"/"更少"按钮
+.fullscreen-more-button {
+  background: none;
+  border: none;
+  color: rgba(22, 24, 35, 0.75); // 深色文字
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  line-height: 20px; // 与文本行高一致
+  align-self: flex-start; // 与文本顶部对齐
+
+  &:hover {
+    text-decoration: underline;
+    color: rgba(22, 24, 35, 0.9);
+  }
+}
+
+// 翻译按钮
+.fullscreen-translate-button {
+  background: none;
+  border: none;
+  color: rgba(22, 24, 35, 0.5); // 深色文字，稍浅
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  letter-spacing: 0.09380000000000001;
+
+  &:hover {
+    text-decoration: underline;
+    color: rgba(22, 24, 35, 0.75);
+  }
+}
+
+.fullscreen-music-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px; // 参考 TikTok: font-size: 14px
+  line-height: 18px;
+  color: rgba(22, 24, 35, 0.75); // 深色文字
+  margin: 0;
+  margin-top: 0.5rem; // 参考 TikTok: padding-top: 0.5rem
+  width: 100%;
+  min-width: 0px; // 参考 TikTok
+}
+
+.fullscreen-music-icon {
+  width: 16px;
+  height: 16px;
+  color: rgba(22, 24, 35, 0.75); // 深色
+}
+
+.fullscreen-music-title {
+  color: rgba(22, 24, 35, 0.75); // 深色文字
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: rgba(22, 24, 35, 0.9);
+  }
+}
+
+// 全屏模式：右侧头像和关注按钮 - 参考 TikTok 的 DivAvatarActionItemContainer
+.fullscreen-avatar-container {
+  margin-bottom: 0; // 移除底部边距，由父容器的gap控制
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // 加号按钮将覆盖在头像上，不需要gap
+  gap: 0;
+}
+
+// 全屏模式下，action-container 与视频更贴近
+.action-container.fullscreen {
+  gap: 12px; // 缩小间距，统一为12px
+}
+
+.fullscreen-avatar-link {
+  position: relative;
+  display: block;
+  width: 48px; // 参考 TikTok: width: 48px; height: 48px;
+  height: 48px;
+  text-decoration: none;
+  z-index: 1; // 确保头像在上层
+  // 为加号按钮提供定位基准
+  margin-bottom: 0;
+}
+
+.fullscreen-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: none; // TikTok 没有边框
+}
+
+// 关注按钮 - 参考 TikTok 的 ButtonAvatarFollowButton
+// 加号按钮覆盖在头像底部偏下位置
+.fullscreen-follow-button {
+  width: 24px; // 稍小的加号按钮
+  height: 24px;
+  border-radius: 50%; // 圆形按钮
+  background-color: #ff0050; // TikTok 红色
+  border: 2px solid #fff; // 白色边框，使其在头像上更明显
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+  position: absolute; // 绝对定位，覆盖在头像上
+  bottom: -10px; // 位于头像容器底部，稍微延伸出头像边界
+  left: 50%;
+  transform: translateX(-50%); // 水平居中
+  z-index: 3; // 确保在头像上方
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); // 添加阴影，使其更突出
+
+  &:hover {
+    background-color: #ff1a66;
+    transform: translateX(-50%) scale(1.1);
+  }
+
+  &:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+
+  svg {
+    width: 14px; // 稍小的图标
+    height: 14px;
+    color: #fff;
+  }
 }

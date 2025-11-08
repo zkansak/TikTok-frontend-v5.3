@@ -1,0 +1,243 @@
+.wrapper {
+  position: fixed; // 改为 fixed，脱离文档流，实现整个页面居中
+  top: var(--default-layout-header-height, 60px); // 从 header 下方开始
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw; // 整个视口宽度
+  height: calc(100vh - var(--default-layout-header-height, 60px)); // 占据header下方的全部高度
+  overflow: hidden;
+  background-color: var(--white, #fff); // 改为白色背景，与其他区域一致
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // 允许文本选择（默认行为）
+  user-select: text;
+  -webkit-user-select: text;
+  // TikTok 的实现：
+  // - 鼠标拖动：用于文本选择（默认行为，不阻止）
+  // - 触摸滑动：用于切换视频
+  // - 鼠标滚轮：用于切换视频
+  // 使用 pan-y 允许垂直滚动，但我们需要通过事件处理来控制视频切换
+  touch-action: pan-y; // 允许垂直滚动
+  -webkit-overflow-scrolling: touch;
+  z-index: 1; // 确保在 sidebar 上方（sidebar z-index: 99）
+}
+
+.video-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  // 确保视频容器不会在滑动过程中被意外移动
+  transform: translateZ(0); // 启用硬件加速
+}
+
+// TikTok 风格：单个容器包含所有视频，垂直排列
+.videos-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+  transform: translateZ(0); // 启用硬件加速
+  backface-visibility: hidden; // 优化渲染性能
+  -webkit-backface-visibility: hidden;
+  // 初始 transform 由 JS 设置
+  // transition 由 JS 动态设置：
+  // - 拖动中：transition = 'none'（实时跟随）
+  // - 切换/回弹：transition = 'transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)'（平滑动画）
+  // 使用更长的动画时长（0.5s）和 TikTok 风格的缓动函数
+}
+
+.video-item-wrapper {
+  width: 100%;
+  height: 100%; // 每个视频占 100% 容器高度
+  flex-shrink: 0; // 防止压缩
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 100%; // 确保每个视频占满高度
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+              transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: opacity, transform;
+  // 使用 contain 优化性能
+  contain: layout style paint;
+  
+  // 进入动画：从下方滑入（统一使用0.4s，与容器动画一致）
+  &.video-entering-from-bottom {
+    opacity: 0;
+    transform: scale(0.98);
+    animation: fadeInFromBottom 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  
+  // 进入动画：从上方滑入（统一使用0.4s）
+  &.video-entering-from-top {
+    opacity: 0;
+    transform: scale(0.98);
+    animation: fadeInFromTop 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  
+  // 退出动画：向上退出（统一使用0.4s）
+  &.video-exiting-up {
+    opacity: 0.8;
+    transform: scale(0.99);
+    animation: fadeOutUp 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  
+  // 退出动画：向下退出（统一使用0.4s）
+  &.video-exiting-down {
+    opacity: 0.8;
+    transform: scale(0.99);
+    animation: fadeOutDown 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  
+  // 当前视频：完全可见
+  &.video-current {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// 淡入动画：从下方（更微妙的动画效果，更接近 TikTok）
+@keyframes fadeInFromBottom {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// 淡入动画：从上方
+@keyframes fadeInFromTop {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// 淡出动画：向上（更微妙的淡出效果）
+@keyframes fadeOutUp {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.98) translateY(-10px);
+  }
+}
+
+// 淡出动画：向下
+@keyframes fadeOutDown {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+}
+
+// 注释掉全局样式，避免影响其他组件
+// 这些样式应该通过 VideoItem 和 VideoCard 组件自己的样式来控制
+// .wrapper {
+//   :global {
+//     // 全屏模式下的样式调整已经在 VideoItem.module.scss 和 VideoCard.module.scss 中处理
+//   }
+// }
+
+.navigation-arrows {
+  position: absolute;
+  right: 20px; // 最右侧，距离边缘20px
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 32px; // 增加按钮之间的间距
+  z-index: 7; // 确保在交互栏之上，但不覆盖header（header z-index: 10）
+  pointer-events: auto; // 确保可以点击
+}
+
+.arrow-button {
+  width: 40px; // 减小按钮尺寸，更像TikTok
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(22, 24, 35, 0.12); // 使用深色背景，适配白色页面
+  border: none;
+  color: rgba(22, 24, 35, 0.75); // 使用深色图标
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+
+  &:hover:not(.disabled) {
+    background-color: rgba(22, 24, 35, 0.2);
+    color: rgba(22, 24, 35, 0.9);
+    transform: scale(1.1);
+  }
+
+  &:active:not(.disabled) {
+    transform: scale(0.95);
+  }
+
+  &.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 20px; // 减小图标尺寸
+    height: 20px;
+  }
+}
+
+.loading-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.empty-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.6rem;
+}
+

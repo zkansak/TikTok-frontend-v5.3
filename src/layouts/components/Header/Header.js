@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import classNames from 'classnames/bind';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import styles from './Header.module.scss';
 import images from '~/assets/images';
@@ -28,6 +28,30 @@ import Image from '~/components/Image';
 import Search from '../Search';
 
 const cx = classNames.bind(styles);
+
+// 分类数据
+const initialCategories = [
+  { id: 'all', label: 'All', active: true },
+  { id: 'trending', label: 'Trending', active: false },
+  { id: 'music', label: 'Music', active: false },
+  { id: 'dance', label: 'Dance', active: false },
+  { id: 'comedy', label: 'Comedy', active: false },
+  { id: 'food', label: 'Food', active: false },
+  { id: 'travel', label: 'Travel', active: false },
+  { id: 'fashion', label: 'Fashion', active: false },
+  { id: 'sports', label: 'Sports', active: false },
+  { id: 'gaming', label: 'Gaming', active: false },
+  { id: 'daily', label: 'Daily Life', active: false },
+  { id: 'beauty', label: 'Beauty Care', active: false },
+  { id: 'society', label: 'Society', active: false },
+  { id: 'outfits', label: 'Outfits', active: false },
+  { id: 'cars', label: 'Cars', active: false },
+  { id: 'animals', label: 'Animals', active: false },
+  { id: 'family', label: 'Family', active: false },
+  { id: 'drama', label: 'Drama', active: false },
+  { id: 'fitness', label: 'Fitness & Health', active: false },
+];
+
 const MENU_ITEMS = [
   {
     title: 'English',
@@ -162,7 +186,146 @@ const MENU_ITEMS = [
 ];
 
 function Header() {
+  const location = useLocation();
+  const isExplorePage = location.pathname === config.routes.explore;
+  
   const [userLogin, setUserLogin] = useState(true);
+  const [categories, setCategories] = useState(initialCategories);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const categoryScrollRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  // 检查滚动位置，显示/隐藏箭头
+  const checkScrollButtons = () => {
+    if (categoryScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    if (!isExplorePage) return;
+    
+    checkScrollButtons();
+    const scrollContainer = categoryScrollRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', checkScrollButtons);
+      window.addEventListener('resize', checkScrollButtons);
+      return () => {
+        scrollContainer.removeEventListener('scroll', checkScrollButtons);
+        window.removeEventListener('resize', checkScrollButtons);
+      };
+    }
+  }, [isExplorePage]);
+
+  // 滚动时显示/隐藏导航栏（仅 Explore 页面）
+  useEffect(() => {
+    if (!isExplorePage) return;
+    
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const headerHeight = 60;
+          
+          if (currentScrollY < headerHeight + 10) {
+            setIsNavVisible(true);
+          } else if (currentScrollY > lastScrollY && currentScrollY > headerHeight + 50) {
+            // 向下滚动，向左移动消失
+            setIsNavVisible(false);
+          } else if (currentScrollY < lastScrollY) {
+            // 向上滚动，重新出现
+            setIsNavVisible(true);
+          }
+          
+          setLastScrollY(currentScrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, isExplorePage]);
+
+  // 滚动分类栏
+  const scrollCategories = (direction) => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = 200;
+      const currentScroll = categoryScrollRef.current.scrollLeft;
+      const newScroll = direction === 'left' 
+        ? currentScroll - scrollAmount 
+        : currentScroll + scrollAmount;
+      categoryScrollRef.current.scrollTo({
+        left: newScroll,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // 处理分类点击
+  const handleCategoryClick = (categoryId) => {
+    setCategories((prev) =>
+      prev.map((cat) => ({
+        ...cat,
+        active: cat.id === categoryId,
+      }))
+    );
+  };
+
+  // 拖动处理
+  const handleDragStart = (e, index) => {
+    setDraggedItem(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+    if (e.target) {
+      e.target.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+  };
+
+  const handleDragEnd = (e) => {
+    if (e.target) {
+      e.target.style.opacity = '1';
+    }
+    setDraggedItem(null);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (draggedItem === null || draggedItem === dropIndex) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const newCategories = [...categories];
+    const draggedCategory = newCategories[draggedItem];
+    newCategories.splice(draggedItem, 1);
+    newCategories.splice(dropIndex, 0, draggedCategory);
+    setCategories(newCategories);
+    setDraggedItem(null);
+    
+    return false;
+  };
+
   const userMenu = [
     {
       title: 'View profile',
@@ -207,8 +370,69 @@ function Header() {
           </Link>
         </div>
 
-        {/* Search */}
-        <Search />
+        {/* 中间区域：统一布局，Explore 页面使用大盒子 */}
+        {isExplorePage ? (
+          <div className={cx('header-center', 'explore-center-box', { visible: isNavVisible, hidden: !isNavVisible })}>
+            <div className={cx('explore-box-content')}>
+              <div className={cx('search-container', 'explore-search')}>
+                <Search />
+              </div>
+              <div className={cx('category-nav-wrapper')}>
+                {showLeftArrow && (
+                  <button
+                    className={cx('scroll-btn', 'scroll-left')}
+                    onClick={() => scrollCategories('left')}
+                    aria-label="Scroll left"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                    </svg>
+                  </button>
+                )}
+                <div
+                  ref={categoryScrollRef}
+                  className={cx('category-nav-scroll')}
+                >
+                  <div className={cx('category-nav-list')}>
+                    {categories.map((category, index) => (
+                      <div
+                        key={category.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, index)}
+                        onDragOver={handleDragOver}
+                        onDragEnter={handleDragEnter}
+                        onDragEnd={handleDragEnd}
+                        onDrop={(e) => handleDrop(e, index)}
+                        className={cx('category-item', {
+                          active: category.active,
+                          dragging: draggedItem === index,
+                        })}
+                        onClick={() => handleCategoryClick(category.id)}
+                      >
+                        {category.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {showRightArrow && (
+                  <button
+                    className={cx('scroll-btn', 'scroll-right')}
+                    onClick={() => scrollCategories('right')}
+                    aria-label="Scroll right"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className={cx('header-center', 'search-center')}>
+            <Search />
+          </div>
+        )}
 
         <div className={cx('action')}>
           <Button leftIcon={<UploadIcon />} basic to={config.routes.upload}>
@@ -242,7 +466,7 @@ function Header() {
             {userLogin ? (
               <Image
                 className={cx('user-ava')}
-                src="https://vapa.vn/wp-content/uploads/2022/12/cac-hinh-cute-001-1.jpg"
+                src="https://i.pravatar.cc/150?img=8"
                 alt="user-avatar"
                 fallback={require('~/assets/images/no-avatar.jpeg')}
               />

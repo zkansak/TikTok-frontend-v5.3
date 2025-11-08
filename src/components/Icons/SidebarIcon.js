@@ -153,3 +153,82 @@ export const MusicTagIcon = ({ className, width = '1.6rem', height = '1.6rem' })
     ></path>
   </svg>
 );
+
+export const ActivityIcon = ({ className, width = '3.2rem', height = '3.2rem' }) => (
+  <svg
+    className={className}
+    width={width}
+    height={height}
+    viewBox="0 0 48 48"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4ZM6 24C6 14.0589 14.0589 6 24 6C33.9411 6 42 14.0589 42 24C42 33.9411 33.9411 42 24 42C14.0589 42 6 33.9411 6 24Z"
+    />
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M24 12C17.3726 12 12 17.3726 12 24C12 30.6274 17.3726 36 24 36C30.6274 36 36 30.6274 36 24C36 17.3726 30.6274 12 24 12ZM14 24C14 18.4772 18.4772 14 24 14C29.5228 14 34 18.4772 34 24C34 29.5228 29.5228 34 24 34C18.4772 34 14 29.5228 14 24Z"
+    />
+    <circle cx="24" cy="24" r="3" />
+  </svg>
+);
+
+export const ActivityActiveIcon = ({ className, width = '3.2rem', height = '3.2rem' }) => (
+  <svg
+    className={className}
+    width={width}
+    height={height}
+    viewBox="0 0 48 48"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4ZM24 12C17.3726 12 12 17.3726 12 24C12 30.6274 17.3726 36 24 36C30.6274 36 36 30.6274 36 24C36 17.3726 30.6274 12 24 12Z"
+    />
+    <circle cx="24" cy="24" r="3" />
+  </svg>
+);
+
+export const ExploreIcon = ({ className, width = '3.2rem', height = '3.2rem' }) => (
+  <svg
+    className={className}
+    width={width}
+    height={height}
+    viewBox="0 0 48 48"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4ZM6 24C6 14.0589 14.0589 6 24 6C33.9411 6 42 14.0589 42 24C42 33.9411 33.9411 42 24 42C14.0589 42 6 33.9411 6 24Z"
+    />
+    <path d="M24 10L30 20L20 20L24 10Z" />
+    <path d="M24 38L18 28L28 28L24 38Z" />
+    <path d="M10 24L20 18L20 30L10 24Z" />
+    <path d="M38 24L28 30L28 18L38 24Z" />
+  </svg>
+);
+
+export const ExploreActiveIcon = ({ className, width = '3.2rem', height = '3.2rem' }) => (
+  <svg
+    className={className}
+    width={width}
+    height={height}
+    viewBox="0 0 48 48"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="24" cy="24" r="20" />
+    <path d="M24 10L30 20L20 20L24 10Z" fill="white" />
+    <path d="M24 38L18 28L28 28L24 38Z" fill="white" />
+    <path d="M10 24L20 18L20 30L10 24Z" fill="white" />
+    <path d="M38 24L28 30L28 18L38 24Z" fill="white" />
+  </svg>
+);

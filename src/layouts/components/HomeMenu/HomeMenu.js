@@ -69,7 +69,88 @@ function HomeMenu() {
     //   )
     //   .then((data) => console.log(data))
     //   .catch((err) => console.log(err));
-    setFeedList(fakeFeedAPI);
+    const isNonLatin = (text) => /[^\x00-\x7F]/.test(text || '');
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const enNames = [
+      'Alex Carter',
+      'Mia Johnson',
+      'Ethan Walker',
+      'Liam Brooks',
+      'Ava Thompson',
+      'Noah Davis',
+      'Emily Clarke',
+      'James Miller',
+      'Sophia Turner',
+      'Olivia Bennett',
+    ];
+    const ruNames = [
+      'Анна Петрова',
+      'Иван Смирнов',
+      'Дарья Иванова',
+      'Алексей Кузнецов',
+      'София Волкова',
+      'Никита Орлов',
+      'Мария Соколова',
+      'Даниил Морозов',
+    ];
+    const enBios = [
+      'Business inquiries: contact via bio link',
+      'Creator | Daily vibes and travel',
+      'Food lover. New videos every week',
+      'Music and lifestyle. Collabs DM',
+      'Sharing moments | Opinions my own',
+    ];
+    const ruBios = [
+      'Контакты для сотрудничества — в профиле',
+      'Музыка и лайфстайл. Пишите в ДМ',
+      'Новые видео каждую неделю',
+      'Обзоры, влоги, позитив',
+    ];
+    const enCaptions = [
+      '#trending #foryou #vibes',
+      'Coffee break hits different today ☕️ #fyp',
+      'Dance with us! #dance #viral',
+      'POV: weekend mood activated ✨',
+      'Quick recipe you need to try 👇 #food',
+    ];
+    const ruCaptions = [
+      'Настроение на выходные ✨ #fyp',
+      'Кофе и хорошие новости ☕️',
+      'Трендовый звук — пробуем вместе',
+      'Лайфхак, который ты искал(а) 👇',
+      'Поделись с другом! #рекомендации',
+    ];
+
+    const transform = (item) => {
+      const author = { ...(item.author || {}) };
+      const useRu = Math.random() < 0.4; // 混合一部分俄语
+
+      if (isNonLatin(author.nickname)) {
+        author.nickname = useRu ? pick(ruNames) : pick(enNames);
+      }
+      if (isNonLatin(author.signature)) {
+        author.signature = useRu ? pick(ruBios) : pick(enBios);
+      }
+
+      const music = { ...(item.music || {}) };
+      if (isNonLatin(music.title)) {
+        music.title = useRu ? 'original sound' : 'original sound';
+      }
+
+      let desc = item.desc || '';
+      if (isNonLatin(desc) || /#xuhuong|#ancungtiktok|#viet|#ChiYeuMinhAnh/i.test(desc)) {
+        desc = (useRu ? pick(ruCaptions) : pick(enCaptions));
+      }
+
+      return {
+        ...item,
+        author,
+        music,
+        desc,
+      };
+    };
+
+    setFeedList(fakeFeedAPI.map(transform));
   }, []);
   return (
     <main className={cx('wrapper')}>

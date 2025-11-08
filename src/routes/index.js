@@ -1,21 +1,26 @@
+import { lazy } from 'react';
 import config from '~/config';
 // Layout
 import { HeaderOnly } from '~/layouts';
 
-// Pages
-import Home from '~/pages/Home';
-import Following from '~/pages/Following';
-import Profile from '~/pages/Profile';
-import Upload from '~/pages/Upload';
-import Search from '~/pages/Search';
-import NotFound from '~/pages/NotFound';
-import Live from '~/pages/Live';
-import About from '~/pages/About';
-import Music from '~/pages/Music';
+// Pages - 使用懒加载优化性能
+const Home = lazy(() => import('~/pages/Home'));
+const Following = lazy(() => import('~/pages/Following'));
+const Activity = lazy(() => import('~/pages/Activity'));
+const Explore = lazy(() => import('~/pages/Explore'));
+const Profile = lazy(() => import('~/pages/Profile'));
+const Upload = lazy(() => import('~/pages/Upload'));
+const Search = lazy(() => import('~/pages/Search'));
+const NotFound = lazy(() => import('~/pages/NotFound'));
+const Live = lazy(() => import('~/pages/Live'));
+const About = lazy(() => import('~/pages/About'));
+const Music = lazy(() => import('~/pages/Music'));
 
 const publicRoutes = [
   { path: config.routes.home, component: Home },
   { path: config.routes.following, component: Following },
+  { path: config.routes.activity, component: Activity },
+  { path: config.routes.explore, component: Explore },
   { path: config.routes.profile, component: Profile },
   { path: config.routes.upload, component: Upload, layout: HeaderOnly },
   { path: config.routes.search, component: Search, layout: null },

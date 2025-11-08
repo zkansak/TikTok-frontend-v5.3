@@ -13,23 +13,27 @@ const cx = classNames.bind(styles);
 
 function TextInfo({ data }) {
   const handleDesc = useCallback(() => {
-    if (!data.text_extra.length) {
+    const desc = (data && typeof data.desc === 'string') ? data.desc : '';
+    const textExtra = Array.isArray(data?.text_extra) ? data.text_extra : [];
+
+    if (textExtra.length === 0) {
       return [
         {
-          component: <span>{data.desc}</span>,
+          component: <span>{desc}</span>,
         },
       ];
     }
-    let results = [];
-    data.text_extra.forEach((ele, index, array) => {
-      let a, b;
-      !index ? (a = data.desc.substring(0, ele.start)) : (a = data.desc.substring(array[index - 1].end, ele.start));
 
-      b = data.desc.substring(ele.start, ele.end);
+    const results = [];
+    textExtra.forEach((ele, index, array) => {
+      let a, b;
+      a = index === 0 ? desc.substring(0, ele.start) : desc.substring(array[index - 1].end, ele.start);
+      b = desc.substring(ele.start, ele.end);
+
       results.push({ component: <span>{a}</span> });
       results.push({
         component: (
-          <Link>
+          <Link to={`${config.routes.search}?q=${encodeURIComponent(b)}`}>
             <strong className={cx('hashTag-strong')}>{b}</strong>
           </Link>
         ),
@@ -37,12 +41,12 @@ function TextInfo({ data }) {
         id: ele.hashtag_id,
         name: ele.hashtag_name,
       });
-      if (index === data.text_extra.length - 1) {
-        results.push({ component: <span>{data.desc.substring(ele.end, data.desc.length)}</span> });
+      if (index === textExtra.length - 1) {
+        results.push({ component: <span>{desc.substring(ele.end, desc.length)}</span> });
       }
     });
     return results;
-  }, [data.desc, data.text_extra]);
+  }, [data]);
 
   const convertedDesc = useMemo(() => handleDesc(), [handleDesc]);
   return (
@@ -74,10 +78,10 @@ function TextInfo({ data }) {
       <h4 className={cx('music-container')}>
         <MusicTagIcon className={cx('music-icon')} />
         <Link
-          to={`${config.routes.music.split(':')[0]}${data.music.title.replace(/ /g, '-')}-${data.music.id}`}
+          to={`${config.routes.music.split(':')[0]}${(data.music?.title || '').replace(/ /g, '-')}-${data.music?.id || ''}`}
           className={cx('music-title')}
         >
-          {data.music.title}
+          {data.music?.title || ''}
         </Link>
       </h4>
     </div>

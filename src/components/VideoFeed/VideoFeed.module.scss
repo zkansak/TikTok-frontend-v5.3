@@ -1,0 +1,151 @@
+.wrapper {
+  min-width: 420px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+}
+
+.feed-container {
+  width: 100%;
+  max-width: 692px; // TikTok 网页端最大宽度
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px; // 左右内边距
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px 20px;
+}
+
+.spinner {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.spinner-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--primary, #fe2c55);
+  animation: bounce 1.4s infinite ease-in-out both;
+
+  &:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  &:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  min-height: 400px;
+}
+
+.empty-text {
+  font-size: 1.6rem;
+  color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
+  font-weight: 400;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+}
+
+.error-text {
+  font-size: 1.4rem;
+  color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
+  font-weight: 400;
+}
+
+.retry-button {
+  padding: 8px 24px;
+  background-color: var(--primary, #fe2c55);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.scroll-trigger {
+  height: 20px;
+  width: 100%;
+  min-height: 20px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.end-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.end-text {
+  font-size: 1.4rem;
+  color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
+  font-weight: 400;
+}
+
+.truncated-notice {
+  padding: 12px 20px;
+  text-align: center;
+  background-color: rgba(22, 24, 35, 0.03);
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.truncated-text {
+  font-size: 1.2rem;
+  color: var(--text-color-secondary, rgba(22, 24, 35, 0.6));
+  font-weight: 400;
+  margin: 0;
+}
+

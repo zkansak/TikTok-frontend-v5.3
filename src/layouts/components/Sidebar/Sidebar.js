@@ -11,6 +11,10 @@ import {
   HomeIcon,
   LiveActiveIcon,
   LiveIcon,
+  ActivityIcon,
+  ActivityActiveIcon,
+  ExploreIcon,
+  ExploreActiveIcon,
 } from '~/components/Icons';
 import LinkMenu from './LinkMenu';
 import SuggestedMenu from './SuggestedMenu';
@@ -25,6 +29,7 @@ import DiscoverMenu from './DiscoverMenu/DiscoverMenu';
 import fakeFollowingUserAPI from '~/assets/json/fakeFollowingUserAPI.json';
 import fakeSuggestedAccountsAPI from '~/assets/json/fakeSuggestedAccountsAPI.json';
 import fakeDiscoverAPI from '~/assets/json/fakeDiscoverAPI.json';
+import { generateAvatarUrl } from '~/utils/dataTransform';
 
 const cx = classNames.bind(styles);
 
@@ -122,7 +127,47 @@ function Sidebar() {
     // fetchDiscoverAPI();
     const fetchFakeAPI = () => {
       // setFollowings(fakeFollowingUserAPI);
-      setSuggested(fakeSuggestedAccountsAPI);
+      const isNonLatin = (text) => /[^\x00-\x7F]/.test(text || '');
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+      const enNames = ['Alex Carter', 'Mia Johnson', 'Ethan Walker', 'Ava Thompson', 'James Miller'];
+      const ruNames = ['Анна Петрова', 'Иван Смирнов', 'Мария Соколова', 'Никита Орлов'];
+      const enBios = [
+        'Creator | New posts weekly',
+        'Travel • Food • Daily life',
+        'For collabs, DM on IG',
+      ];
+      const ruBios = [
+        'Контакты для сотрудничества — в ДМ',
+        'Путешествия и жизнь каждый день',
+      ];
+
+      const transformAccount = (acc) => {
+        const useRu = Math.random() < 0.4;
+        const next = { ...acc };
+        if (isNonLatin(next.nickname)) next.nickname = useRu ? pick(ruNames) : pick(enNames);
+        if (isNonLatin(next.signature)) next.signature = useRu ? pick(ruBios) : pick(enBios);
+        
+        // 生成基于用户ID的唯一头像
+        const userId = next.uid || next.unique_id || '';
+        const generatedAvatarUrl = generateAvatarUrl(userId);
+        
+        // 替换头像URL为生成的头像
+        if (next.avatar_thumb) {
+          next.avatar_thumb = {
+            ...next.avatar_thumb,
+            url_list: [generatedAvatarUrl],
+          };
+        } else {
+          next.avatar_thumb = {
+            url_list: [generatedAvatarUrl],
+          };
+        }
+        
+        return next;
+      };
+
+      setFollowings(fakeFollowingUserAPI.map(transformAccount));
+      setSuggested(fakeSuggestedAccountsAPI.map(transformAccount));
       setDiscover(fakeDiscoverAPI);
     };
     fetchFakeAPI();
@@ -138,7 +183,19 @@ function Sidebar() {
             icon={<FollowingIcon />}
             activeIcon={<FollowingActiveIcon />}
           />
+          <MenuItem
+            title="Activity"
+            to={config.routes.activity}
+            icon={<ActivityIcon />}
+            activeIcon={<ActivityActiveIcon />}
+          />
           <MenuItem title="LIVE" to={config.routes.live} icon={<LiveIcon />} activeIcon={<LiveActiveIcon />} />
+          <MenuItem
+            title="Explore"
+            to={config.routes.explore}
+            icon={<ExploreIcon />}
+            activeIcon={<ExploreActiveIcon />}
+          />
         </Menu>
 
         <div className={cx('category-container')}>
