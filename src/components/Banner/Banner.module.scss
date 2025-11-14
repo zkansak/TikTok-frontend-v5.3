@@ -1,0 +1,95 @@
+.banner-wrapper {
+  width: 100%;
+  margin-bottom: 16px;
+  position: relative;
+
+  &.placement-home_top {
+    margin-bottom: 0;
+  }
+
+  &.placement-home_bottom {
+    margin-top: 16px;
+  }
+
+  &.placement-home_center {
+    margin: 16px 0;
+  }
+}
+
+.banner-container {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); // 添加渐变背景
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); // 添加阴影，更容易看到
+  border: 2px solid rgba(255, 255, 255, 0.2); // 添加边框，更容易看到
+
+  &:hover {
+    opacity: 0.95;
+    transform: translateY(-2px); // 悬停时轻微上移
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0); // 点击时恢复位置
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.banner-link {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.banner-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  max-height: 200px;
+  min-height: 150px; // 确保有最小高度，更容易看到
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); // 添加渐变背景，图片加载失败时也能看到
+}
+
+.banner-placeholder {
+  width: 100%;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  color: #999;
+  font-size: 14px;
+}
+
+.close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+

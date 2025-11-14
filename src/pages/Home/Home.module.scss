@@ -38,3 +38,26 @@
   }
 }
 
+.banner-section {
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 0 16px;
+
+  &.banner-top {
+    margin-bottom: 16px;
+    margin-top: 16px;
+  }
+
+  &.banner-bottom {
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+
+
+
+
+
+

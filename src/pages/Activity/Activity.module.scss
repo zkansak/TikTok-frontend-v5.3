@@ -1,22 +1,47 @@
 .wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  min-width: 0; // 防止 flex 子元素溢出
   width: 100%;
-  min-height: 100vh;
-  background-color: var(--background-color, #fff);
+  box-sizing: border-box; // 确保 padding 包含在宽度内
 }
 
 .container {
-  max-width: 1150px;
-  margin: 0 auto;
-  padding: 24px 16px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: visible; // 改为 visible，让表格自己处理滚动
+  min-width: 0; // 防止 flex 子元素溢出
 }
 
 .header {
-  margin-bottom: 32px;
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
 }
 
 .title {
-  font-size: 2.8rem;
+  font-size: 2.4rem;
   font-weight: 700;
   color: var(--text-color);
   margin-bottom: 8px;
@@ -24,13 +49,70 @@
 }
 
 .subtitle {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
   font-weight: 400;
 }
 
 .content {
+  background: var(--background-color, #fff);
+  border-radius: 8px;
+  flex-shrink: 0;
   width: 100%;
+  min-width: 0; // 防止溢出
+  overflow: visible; // 让 Ant Design Table 自己处理滚动
+  
+  // Ant Design Table 样式覆盖
+  :global {
+    .ant-table-wrapper {
+      width: 100%;
+    }
+    
+    .ant-table {
+      width: 100%;
+    }
+    
+    .ant-table-container {
+      width: 100%;
+      overflow-x: auto; // 确保可以横向滚动
+    }
+    
+    // 确保固定列正确显示
+    .ant-table-cell-fix-right {
+      position: sticky !important;
+      right: 0 !important;
+      z-index: 2;
+      background: var(--background-color, #fff) !important;
+      box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1); // 添加阴影，让固定列更明显
+    }
+    
+    // 确保表格头部固定列也正确显示
+    .ant-table-thead > tr > th.ant-table-cell-fix-right {
+      z-index: 3 !important;
+      background: var(--background-color, #fff) !important;
+      position: sticky !important;
+      right: 0 !important;
+    }
+    
+    // 确保表格体中的固定列也正确显示
+    .ant-table-tbody > tr > td.ant-table-cell-fix-right {
+      position: sticky !important;
+      right: 0 !important;
+      z-index: 1;
+      background: var(--background-color, #fff) !important;
+    }
+    
+    // 确保表格容器可以横向滚动
+    .ant-spin-nested-loading {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    
+    .ant-spin-container {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+  }
 }
 
 .empty-state {
@@ -52,5 +134,99 @@
 .empty-hint {
   font-size: 1.4rem;
   color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
+}
+
+.stats-row {
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box; // 确保宽度计算正确
+}
+
+.filter-bar {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--background-color, #fff);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box; // 确保 padding 包含在宽度内
+}
+
+.selected-count {
+  color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
+  font-size: 1.4rem;
+  margin-right: 8px;
+}
+
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.preview-info {
+  padding: 16px;
+  background: var(--background-color-secondary, #f5f5f5);
+  border-radius: 8px;
+  
+  p {
+    margin: 8px 0;
+    font-size: 1.4rem;
+    color: var(--text-color);
+    
+    strong {
+      color: var(--text-color-secondary, rgba(22, 24, 35, 0.75));
+      margin-right: 8px;
+    }
+  }
+}
+
+.preview-resource {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.preview-image-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.preview-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
+  font-size: 1.4rem;
+  background: var(--background-color-secondary, #f5f5f5);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.preview-note {
+  margin-top: 12px;
+  text-align: center;
+  color: var(--text-color-secondary, rgba(22, 24, 35, 0.5));
+  font-size: 1.2rem;
+  
+  small {
+    font-style: italic;
+  }
 }
 

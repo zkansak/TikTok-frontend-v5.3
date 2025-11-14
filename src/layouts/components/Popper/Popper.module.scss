@@ -1,5 +1,7 @@
 .wrapper {
   width: 100%;
   padding: 8px 0;
-  background-color: var(--white);
+  background-color: var(--background-color, var(--white));
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
 }

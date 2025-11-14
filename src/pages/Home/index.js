@@ -1,9 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, startTransition } from 'react';
 import classNames from 'classnames/bind';
 
 import VideoFeed from '~/components/VideoFeed';
 import VideoFullscreenView from '~/components/VideoFullscreenView';
+import BannerCarousel from '~/components/BannerCarousel';
+import Popup from '~/components/Popup';
 import { getFeedPaginated } from '~/services/feedService';
+import { getActiveResourcesByPlacement } from '~/services/activityService';
 import { transformVideoList } from '~/utils/dataTransform';
 import styles from './Home.module.scss';
 
@@ -25,6 +28,43 @@ function Home() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0); // 当前可见的视频索引
   const [scrollToIndex, setScrollToIndex] = useState(null); // 要滚动到的视频索引
   const previousViewModeRef = useRef(VIEW_MODE.LIST);
+
+  // 活动资源状态
+  const [topBanners, setTopBanners] = useState([]);
+  const [bottomBanners, setBottomBanners] = useState([]);
+  const [popups, setPopups] = useState([]);
+  const [closedPopups, setClosedPopups] = useState(new Set());
+  
+  // 调试信息显示控制（从 localStorage 读取）
+  const [debugInfoVisible, setDebugInfoVisible] = useState(() => {
+    const saved = localStorage.getItem('debugInfoVisible');
+    return saved === 'true';
+  });
+
+  // 监听 localStorage 变化，实时更新调试信息显示状态
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'debugInfoVisible') {
+        setDebugInfoVisible(e.newValue === 'true');
+      }
+    };
+    
+    // 监听 storage 事件（跨标签页）
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 监听自定义事件（同标签页内）
+    const handleCustomStorageChange = (e) => {
+      if (e.detail?.key === 'debugInfoVisible') {
+        setDebugInfoVisible(e.detail.value === 'true');
+      }
+    };
+    window.addEventListener('customStorageChange', handleCustomStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('customStorageChange', handleCustomStorageChange);
+    };
+  }, []);
 
   // 数据源：使用分页 API
   const dataSource = useCallback(async (pageNum = 1, pageSize = 10) => {
@@ -73,10 +113,85 @@ function Home() {
     [dataSource, transformData]
   );
 
-  // 初始加载
+  // 预加载图片（使用多种方式确保尽早加载）
+  const preloadImage = useCallback((url) => {
+    if (!url) return;
+    
+    // 方式1: 使用 link preload（最高优先级）
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = url;
+    link.fetchPriority = 'high';
+    document.head.appendChild(link);
+    
+    // 方式2: 使用 Image 对象预加载（确保图片缓存）
+    const img = new Image();
+    img.src = url;
+    img.loading = 'eager';
+    img.fetchPriority = 'high';
+  }, []);
+
+  // 加载活动资源（优化LCP性能）
+  const loadActivityResources = useCallback(async () => {
+    try {
+      // 优先加载顶部Banner（LCP元素）
+      const topBannerData = await getActiveResourcesByPlacement('home_top', 'banner');
+      
+      // 立即设置顶部Banner状态，触发渲染
+      if (topBannerData.length > 0) {
+        const firstBanner = topBannerData[0];
+        // 立即预加载第一个Banner图片（LCP元素），在设置状态之前
+        if (firstBanner?.resourceUrl) {
+          preloadImage(firstBanner.resourceUrl);
+        }
+        // 立即设置状态，触发组件渲染
+        setTopBanners(topBannerData);
+      }
+      
+      // 延迟加载其他资源，不阻塞LCP元素
+      // 使用 startTransition 延迟非关键内容的更新，优先渲染 LCP 元素
+      startTransition(async () => {
+        const [bottomBannerData, popupData] = await Promise.all([
+          getActiveResourcesByPlacement('home_bottom', 'banner'),
+          getActiveResourcesByPlacement('home_center', 'popup'),
+        ]);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📢 顶部Banner数据:', topBannerData);
+          console.log('📢 底部Banner数据:', bottomBannerData);
+          console.log('📢 弹窗数据:', popupData);
+        }
+        
+        setBottomBanners(bottomBannerData);
+        setPopups(popupData);
+        
+        // 预加载其他图片（延迟执行，不阻塞 LCP）
+        bottomBannerData.forEach((banner) => preloadImage(banner?.resourceUrl));
+        popupData.forEach((popup) => preloadImage(popup?.resourceUrl));
+      });
+    } catch (error) {
+      console.error('❌ 加载活动资源失败:', error);
+    }
+  }, [preloadImage]);
+
+  // 初始加载 - 优先加载活动资源（提升LCP）
   useEffect(() => {
-    loadData(1, true);
-  }, [loadData]);
+    // 优先加载活动资源（关键路径）
+    loadActivityResources();
+    // 使用 startTransition 延迟加载视频数据，避免阻塞 Banner 渲染
+    startTransition(() => {
+      // 延迟加载视频数据，确保 Banner 优先渲染
+      setTimeout(() => {
+        loadData(1, true);
+      }, 0);
+    });
+  }, [loadData, loadActivityResources]);
+
+  // 处理弹窗关闭
+  const handlePopupClose = useCallback((activityId) => {
+    setClosedPopups((prev) => new Set([...prev, activityId]));
+  }, []);
 
   // 加载更多（用于全屏模式）
   const handleLoadMore = useCallback(() => {
@@ -135,6 +250,35 @@ function Home() {
 
   return (
     <div className={cx('wrapper')}>
+      {/* 顶部Banner轮播 */}
+      {viewMode === VIEW_MODE.LIST && topBanners.length > 0 && (
+        <div className={cx('banner-section', 'banner-top')}>
+          <BannerCarousel activities={topBanners} autoPlayInterval={5000} />
+        </div>
+      )}
+      
+      {/* 调试信息（开发环境显示，且需要开启调试信息开关） */}
+      {process.env.NODE_ENV === 'development' && debugInfoVisible && (
+        <div style={{ 
+          position: 'fixed', 
+          bottom: '20px', 
+          right: '20px', 
+          background: 'rgba(0,0,0,0.8)', 
+          color: '#fff', 
+          padding: '12px', 
+          borderRadius: '8px',
+          fontSize: '12px',
+          zIndex: 10000,
+          maxWidth: '300px'
+        }}>
+          <div>🔍 活动资源调试信息</div>
+          <div>顶部Banner: {topBanners.length} 个</div>
+          <div>底部Banner: {bottomBanners.length} 个</div>
+          <div>弹窗: {popups.length} 个</div>
+          <div>已关闭弹窗: {closedPopups.size} 个</div>
+        </div>
+      )}
+
       {/* 模式切换按钮 */}
       <button className={cx('mode-toggle')} onClick={toggleViewMode} aria-label="Toggle view mode">
         {viewMode === VIEW_MODE.LIST ? (
@@ -150,16 +294,24 @@ function Home() {
 
       {/* 根据模式显示不同组件 */}
       {viewMode === VIEW_MODE.LIST ? (
-        <VideoFeed
-          dataSource={listDataSource}
-          transformData={transformData}
-          emptyMessage="No videos available"
-          pageSize={10}
-          enableInfiniteScroll={true}
-          maxItems={null}
-          onVideoVisibilityChange={setCurrentVideoIndex}
-          scrollToIndex={scrollToIndex}
-        />
+        <>
+          <VideoFeed
+            dataSource={listDataSource}
+            transformData={transformData}
+            emptyMessage="No videos available"
+            pageSize={10}
+            enableInfiniteScroll={true}
+            maxItems={null}
+            onVideoVisibilityChange={setCurrentVideoIndex}
+            scrollToIndex={scrollToIndex}
+          />
+          {/* 底部Banner轮播 */}
+          {bottomBanners.length > 0 && (
+            <div className={cx('banner-section', 'banner-bottom')}>
+              <BannerCarousel activities={bottomBanners} autoPlayInterval={5000} />
+            </div>
+          )}
+        </>
       ) : (
         <VideoFullscreenView
           feedList={feedList}
@@ -170,6 +322,16 @@ function Home() {
           onVideoIndexChange={setCurrentVideoIndex}
         />
       )}
+
+      {/* 弹窗（只显示第一个未关闭的） */}
+      {viewMode === VIEW_MODE.LIST &&
+        popups.length > 0 &&
+        popups
+          .filter((popup) => !closedPopups.has(popup.id))
+          .slice(0, 1)
+          .map((activity) => (
+            <Popup key={activity.id} activity={activity} onClose={() => handlePopupClose(activity.id)} />
+          ))}
     </div>
   );
 }

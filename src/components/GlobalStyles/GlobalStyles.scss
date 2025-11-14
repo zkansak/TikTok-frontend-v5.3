@@ -11,6 +11,38 @@
   --default-layout-width: 100%;
   --default-layout-sidebar-width: 240px;
   --default-layout-video-item-width: 624px;
+
+  // Light mode colors (default)
+  --background-color: #fff;
+  --background-color-secondary: #f5f5f5;
+  --sidebar-background: #fff;
+  --text-color: rgba(22, 24, 35, 1);
+  --text-color-secondary: rgba(22, 24, 35, 0.75);
+  --text-color-tertiary: rgba(22, 24, 35, 0.5);
+  --border-color: rgba(22, 24, 35, 0.12);
+  --border-color-strong: rgba(22, 24, 35, 0.2);
+  --hover-background: rgba(22, 24, 35, 0.03);
+  --hover-background-strong: rgba(22, 24, 35, 0.06);
+  --search-background: rgba(22, 24, 35, 0.06);
+  --search-placeholder: rgb(117, 117, 117);
+  --box-shadow: rgba(0, 0, 0, 0.12);
+}
+
+// Dark mode colors (TikTok style)
+.dark-mode {
+  --background-color: #000000;
+  --background-color-secondary: #161823;
+  --sidebar-background: #161823;
+  --text-color: rgba(255, 255, 255, 0.9);
+  --text-color-secondary: rgba(255, 255, 255, 0.75);
+  --text-color-tertiary: rgba(255, 255, 255, 0.5);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-color-strong: rgba(255, 255, 255, 0.2);
+  --hover-background: rgba(255, 255, 255, 0.08);
+  --hover-background-strong: rgba(255, 255, 255, 0.12);
+  --search-background: rgba(255, 255, 255, 0.12);
+  --search-placeholder: rgba(255, 255, 255, 0.5);
+  --box-shadow: rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -29,6 +61,9 @@ body {
   text-rendering: optimizeSpeed;
   overflow: hidden overlay;
   font-family: ProximaNova, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html *::-webkit-scrollbar {
@@ -39,6 +74,10 @@ html *::-webkit-scrollbar {
 html *::-webkit-scrollbar-thumb {
   border-radius: 4px;
   background-color: rgba(22, 24, 35, 0.06);
+}
+
+.dark-mode *::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 html *::-webkit-scrollbar-track {
@@ -56,7 +95,8 @@ button,
 
 a {
   text-decoration: none;
-  color: var(--default-text-color);
+  color: var(--text-color, var(--default-text-color));
+  transition: color 0.3s ease;
 }
 
 // Fonts embedded
@@ -111,6 +151,7 @@ body {
     font-size: 1.6rem;
     line-height: 2.2rem;
     margin-top: 3px;
+    color: #fff;
   }
 
   .tippy-arrow {
@@ -123,5 +164,16 @@ body {
 
   .tippy-box[data-placement^='bottom'] > .tippy-arrow:before {
     top: -8px;
+  }
+}
+
+.dark-mode {
+  .tippy-box {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #000;
+  }
+
+  .tippy-arrow {
+    background-color: rgba(255, 255, 255, 0.9);
   }
 }

@@ -9,6 +9,7 @@ import images from '~/assets/images';
 import Button from '~/components/Button';
 import Menu from '~/layouts/components/Popper/Menu';
 import config from '~/config';
+import { useDarkMode } from '~/contexts/DarkModeContext';
 
 import {
   DarkModeIcon,
@@ -188,6 +189,7 @@ const MENU_ITEMS = [
 function Header() {
   const location = useLocation();
   const isExplorePage = location.pathname === config.routes.explore;
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   
   const [userLogin, setUserLogin] = useState(true);
   const [categories, setCategories] = useState(initialCategories);
@@ -355,6 +357,9 @@ function Header() {
     switch (menuItem.title) {
       case 'Log out':
         setUserLogin(false);
+        break;
+      case 'Dark mode':
+        toggleDarkMode();
         break;
       default:
         break;
