@@ -1,0 +1,13 @@
+# 忽略所有日志文件
+*.log
+
+# 忽略临时文件和构建输出文件夹
+/dist/
+/build/
+
+# 忽略 Node.js 模块
+/node_modules/
+
+# 忽略本地配置文件（非常重要，防止敏感信息泄露）
+.env
+config.local.js
